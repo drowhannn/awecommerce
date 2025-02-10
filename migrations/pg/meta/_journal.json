@@ -124,8 +124,57 @@
     {
       "idx": 17,
       "version": "7",
-      "when": 1739161103547,
-      "tag": "0017_empty_baron_strucker",
+      "when": 1737974118743,
+      "tag": "0017_sweet_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1737958680274,
+      "tag": "0018_overrated_frog_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1738042563824,
+      "tag": "0019_dusty_kabuki",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1738048268745,
+      "tag": "0020_amusing_princess_powerful",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1738140594545,
+      "tag": "0021_aspiring_meteorite",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1738147891966,
+      "tag": "0022_wonderful_warlock",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1738682312590,
+      "tag": "0023_flawless_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1738924003197,
+      "tag": "0024_old_stone_men",
       "breakpoints": true
     }
   ]

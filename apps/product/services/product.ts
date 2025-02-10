@@ -1,7 +1,6 @@
-import { and, eq, ilike, or, SQL, sql, isNull } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, ilike, isNull, or, SQL, sql } from 'drizzle-orm'
 
-import { brands, categories, NewBrand, NewCategory, NewProduct, NewProductClass, Product, productClasses, productImages, productRelatedProducts, products } from '../schemas'
-import { aliasedTable } from 'drizzle-orm'
+import { brands, categories, NewBrand, NewCategory, NewProduct, NewProductClass, Product, productClasses, productImages, productRelatedProducts, products, productViews } from '../schemas'
 
 type PaginationArgs = {
   page: number
@@ -21,6 +20,8 @@ interface ProductFilter {
   includeInactiveBrands?: boolean
   includeInactiveCategories?: boolean
   includeInactiveProductClasses?: boolean
+  extraFilters?: SQL[]
+  getFilters?: () => SQL[]
 }
 
 class ProductService {
@@ -47,14 +48,18 @@ class ProductService {
   async get(productId: number) {
     const result = await this.db.query.products.findFirst({
       with: {
-        relatedProducts: true,
+        relatedProducts: {
+          with: {
+            relatedProduct: true,
+          },
+        },
         images: true
       },
       where: eq(products.id, productId)
     })
-
     return result ? {
       ...result,
+      relatedProducts: result.relatedProducts.map((r:any) => r.relatedProduct),
       images: result.images.map((image: any) => image.imageUrl)
     } : null
   }
@@ -110,47 +115,56 @@ class ProductService {
   async list(filter: ProductFilter) {
     const where: SQL[] = []
 
-    if (filter.brand) {
-      where.push(eq(products.brandId, filter.brand))
-    }
-    if (filter.category) {
-      where.push(eq(products.categoryId, filter.category))
-    }
-    if (filter.productClass) {
-      where.push(eq(products.productClassId, filter.productClass))
-    }
-    if (filter.status) {
-      where.push(eq(products.status, filter.status))
-    }
-    if (filter.isFeatured !== undefined) {
-      where.push(eq(products.isFeatured, filter.isFeatured))
-    }
-    if (filter.isBestSeller !== undefined) {
-      where.push(eq(products.isBestSeller, filter.isBestSeller))
-    }
-    if (filter.q) {
-      where.push(
-        or(
-          Number(filter.q) ? eq(products.id, Number(filter.q)) : undefined,
-          ilike(products.name, `%${filter.q}%`),
-        )!,
-      )
-    }
+    if(filter.getFilters){
+      where.push(...filter.getFilters())
+    }else{
 
-    if(filter.isActive !== undefined){
-      where.push(eq(products.isActive, filter.isActive))
-    }
+      if (filter.brand) {
+        where.push(eq(products.brandId, filter.brand))
+      }
+      if (filter.category) {
+        where.push(eq(products.categoryId, filter.category))
+      }
+      if (filter.productClass) {
+        where.push(eq(products.productClassId, filter.productClass))
+      }
+      if (filter.status) {
+        where.push(eq(products.status, filter.status))
+      }
+      if (filter.isFeatured !== undefined) {
+        where.push(eq(products.isFeatured, filter.isFeatured))
+      }
+      if (filter.isBestSeller !== undefined) {
+        where.push(eq(products.isBestSeller, filter.isBestSeller))
+      }
+      if (filter.q) {
+        where.push(
+          or(
+            Number(filter.q) ? eq(products.id, Number(filter.q)) : undefined,
+            ilike(products.name, `%${filter.q}%`),
+          )!,
+        )
+      }
 
-    if(!filter.includeInactiveBrands){
-      where.push(or(isNull(products.brandId), eq(brands.isActive, true)))
-    }
+      if(filter.isActive !== undefined){
+        where.push(eq(products.isActive, filter.isActive))
+      }
 
-    if(!filter.includeInactiveCategories){
-      where.push(or(isNull(products.categoryId), eq(categories.isActive, true)))
-    }
+      if(!filter.includeInactiveBrands){
+        where.push(or(isNull(products.brandId), eq(brands.isActive, true)))
+      }
 
-    if(!filter.includeInactiveProductClasses){
-      where.push(or(isNull(products.productClassId), eq(productClasses.isActive, true)))
+      if(!filter.includeInactiveCategories){
+        where.push(or(isNull(products.categoryId), eq(categories.isActive, true)))
+      }
+
+      if(!filter.includeInactiveProductClasses){
+        where.push(or(isNull(products.productClassId), eq(productClasses.isActive, true)))
+      }
+
+      if(filter.extraFilters){
+        where.push(...filter.extraFilters)
+      }
     }
 
     let query = this.db
@@ -164,6 +178,7 @@ class ProductService {
       .leftJoin(brands, eq(products.brandId, brands.id))
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .leftJoin(productClasses, eq(products.productClassId, productClasses.id))
+      .orderBy(desc(products.createdAt))
       .where(and(...where))
 
     if (!filter.pagination) {
@@ -244,8 +259,45 @@ class ProductService {
       .returning()
     return result[0]
   }
-}
 
+  async logProductView(productId: number, userId: string) {
+    await this.db.insert(productViews).values({ productId, userId })
+  }
+
+  async getRecentlyViewedProducts(userId: string, limit: number) {
+   return await this.db
+    .select(
+     { ...getTableColumns(products),}
+    )
+    .from(
+      this.db
+        .selectDistinctOn([productViews.productId], {
+          productId: productViews.productId,
+          createdAt: productViews.createdAt  
+        })
+        .from(productViews)
+        .leftJoin(products, eq(productViews.productId, products.id))
+        .leftJoin(brands, eq(products.brandId, brands.id))
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(productClasses, eq(products.productClassId, productClasses.id))
+        .where(and(
+          eq(productViews.userId, "1"),
+          eq(products.isActive, true),
+          or(isNull(products.brandId), eq(brands.isActive, true)),
+          or(isNull(products.categoryId), eq(categories.isActive, true)),
+           or(isNull(products.productClassId), eq(productClasses.isActive, true))
+        ))
+        .orderBy(
+          productViews.productId,     
+          desc(productViews.createdAt)
+        )
+        .as('latest_views')
+    )
+    .leftJoin(products, sql`latest_views.product_id = ${products.id}`)
+    .orderBy(desc(sql`latest_views.created_at`))
+    .limit(4)
+  }
+}
 interface BrandFilter {
   q?: string
   isActive?: boolean
@@ -299,6 +351,14 @@ class BrandService {
     return result[0]
   }
 
+  async hasAnyProduct(brandId: number) {
+    const result = await this.db
+      .select()
+      .from(products)
+      .where(eq(products.brandId, brandId))
+    return result.length > 0
+  }
+
   async list(filter: BrandFilter) {
     const where: SQL[] = []
 
@@ -319,6 +379,7 @@ class BrandService {
       .select()
       .from(brands)
       .where(and(...where))
+      .orderBy(desc(brands.createdAt))
 
     if (!filter.pagination) {
       return await query
@@ -411,6 +472,14 @@ class ProductClassService {
     return result[0]
   }
 
+  async hasAnyProduct(productClassId: number) {
+    const result = await this.db
+      .select()
+      .from(products)
+      .where(eq(products.productClassId, productClassId))
+    return result.length > 0
+  }
+
   async list(filter?: ProductClassFilter) {
     const where: SQL[] = []
 
@@ -431,6 +500,7 @@ class ProductClassService {
       .select()
       .from(productClasses)
       .where(and(...where))
+      .orderBy(desc(productClasses.createdAt))
 
     if (!filter?.pagination) {
       return await query
@@ -523,6 +593,14 @@ class CategoryService {
     return result[0]
   }
 
+  async hasAnyProduct(categoryId: number) {
+    const result = await this.db
+      .select()
+      .from(products)
+      .where(eq(products.categoryId, categoryId))
+    return result.length > 0
+  }
+
   async list(filter?: CategoryFilter) {
     const where: SQL[] = []
 
@@ -543,6 +621,7 @@ class CategoryService {
       .select()
       .from(categories)
       .where(and(...where))
+      .orderBy(desc(categories.createdAt))
 
     if (!filter?.pagination) {
       return await query

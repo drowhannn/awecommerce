@@ -8,18 +8,19 @@ import {
 import { carts } from '../../cart/schemas'
 import { pgEnum } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
+import { products } from '../../product/schemas'
 
 export const shippingAddresses = pgTable('shipping_address', {
     id: serial().primaryKey(),
     userId: text().notNull(),
     country: text(),
-    country_code: text(),
-    line_1: text(),
-    line_2: text(),
+    countryCode: text(),
+    line1: text(),
+    line2: text(),
     city: text(),
-    house_no: text(),
+    houseNo: text(),
     province: text(),
-    postal_code: text(),
+    postalCode: text(),
     instructions: text(),
     isDefault: boolean().notNull().default(false),
     metadata: jsonb(),
@@ -37,7 +38,7 @@ export const shippingMethods = pgTable('shipping_method', {
   updatedAt: timestamp({ mode: 'string', withTimezone: true }).notNull().defaultNow(),
 })
 
-export const orderStatusEnum = pgEnum('order_status', ['Pending', 'Processing', 'Couriered', 'Shipped', 'Delivered', 'Returned', 'Cancelled', 'Completed'])
+export const orderStatusEnum = pgEnum('order_status', ['Pending','Confirmed', 'Processing', 'Processed', 'Couriered', 'Shipped', 'Delivered', 'Returned', 'Cancelled', 'Completed'])
 export const paymentStatusEnum = pgEnum('payment_status', ['Pending', 'Paid', 'Refunded'])
 
 export const orders = pgTable('order', {
@@ -55,22 +56,30 @@ export const orders = pgTable('order', {
   cancelledBy: text(),
   cancelledAt: timestamp({ mode: 'string', withTimezone: true }),
   cancellationReason: text(),
+  cancellationRemarks: text(),
   createdAt: timestamp({ mode: 'string', withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ mode: 'string', withTimezone: true }).notNull().defaultNow(),
 })
 
 export const orderStatusChanges = pgTable('order_status_change', {
   id: serial().primaryKey(),
-  orderId: integer().notNull().references(() => orders.id),
+  orderId: integer().notNull().references(() => orders.id, { onDelete: 'cascade' }),
   previousStatus: orderStatusEnum().notNull(),
   newStatus: orderStatusEnum().notNull(),
   createdAt: timestamp({ mode: 'string', withTimezone: true }).notNull().defaultNow(),
 })
 
+export const orderLogs = pgTable('order_log', {
+  id: serial().primaryKey(),
+  orderId: integer().notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  log: text().notNull(),
+  createdAt: timestamp({ mode: 'string', withTimezone: true }).notNull().defaultNow(),
+})
+
 export const orderLines = pgTable('order_line', {
   id: serial().primaryKey(),
-  orderId: integer().notNull().references(() => orders.id),
-  productId: integer().notNull(),
+  orderId: integer().notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  productId: integer().notNull().references(() => products.id),
   price: numeric().notNull(),
   discount: numeric().notNull().default('0'),
   tax: numeric().notNull().default('0'),
@@ -84,7 +93,7 @@ export const transactionStatusEnum = pgEnum('transaction_status', ['Requested', 
 
 export const transactions = pgTable('transaction', {
   id: serial().primaryKey(),
-  orderId: integer().notNull().references(() => orders.id),
+  orderId: integer().notNull().references(() => orders.id, { onDelete: 'cascade' }),
   gateway: text().notNull(),
   reference: text(),
   amount: numeric().notNull(),
@@ -98,7 +107,7 @@ export const paymentEventTypes = pgEnum('payment_event_type', ['Paid', 'Refund']
 
 export const paymentEvents = pgTable('payment_event', {
   id: serial().primaryKey(),
-  orderId: integer().notNull().references(() => orders.id),
+  orderId: integer().notNull().references(() => orders.id, { onDelete: 'cascade' }),
   amount: numeric().notNull(),
   type: paymentEventTypes().notNull().default('Paid'),
   reference: text(),
@@ -110,12 +119,17 @@ export const orderRelations = relations(orders, ({ many }) => ({
   statusChanges: many(orderStatusChanges),
   transactions: many(transactions),
   paymentEvents: many(paymentEvents),
+  logs: many(orderLogs),
 }))
 
 export const orderLineRelations = relations(orderLines, ({ one }) => ({
   order: one(orders, {
     fields: [orderLines.orderId],
     references: [orders.id],
+  }),
+  product: one(products, {
+    fields: [orderLines.productId],
+    references: [products.id],
   }),
 }))
 
@@ -136,6 +150,13 @@ export const transactionRelations = relations(transactions, ({ one }) => ({
 export const paymentEventRelations = relations(paymentEvents, ({ one }) => ({
   order: one(orders, {
     fields: [paymentEvents.orderId],
+    references: [orders.id],
+  }),
+}))
+
+export const orderLogRelations = relations(orderLogs, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderLogs.orderId],
     references: [orders.id],
   }),
 }))

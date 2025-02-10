@@ -1,6 +1,6 @@
 {
-  "id": "3080261b-9696-4cd0-bd8c-cf92fd644834",
-  "prevId": "63db0ee6-fdb2-4410-8a04-430cc3042af9",
+  "id": "a30a3111-33a3-4445-b628-9edfe74a9851",
+  "prevId": "a76444c8-bda4-43c5-a820-71f5e5efa7c9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -804,7 +804,72 @@
           "columnsTo": [
             "id"
           ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "order_line_productId_product_id_fk": {
+          "name": "order_line_productId_product_id_fk",
+          "tableFrom": "order_line",
+          "tableTo": "product",
+          "columnsFrom": [
+            "productId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.order_log": {
+      "name": "order_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "log": {
+          "name": "log",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "order_log_orderId_order_id_fk": {
+          "name": "order_log_orderId_order_id_fk",
+          "tableFrom": "order_log",
+          "tableTo": "order",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -864,7 +929,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -970,15 +1035,12 @@
           "primaryKey": false,
           "notNull": false
         },
-<<<<<<< HEAD
-=======
         "cancellationRemarks": {
           "name": "cancellationRemarks",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
->>>>>>> 015f301f4081eca840dd246201d6e1e1521a7679
         "createdAt": {
           "name": "createdAt",
           "type": "timestamp with time zone",
@@ -1071,7 +1133,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1312,7 +1374,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1321,711 +1383,6 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
-<<<<<<< HEAD
-    },
-    "public.offer_application_log": {
-      "name": "offer_application_log",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "offerId": {
-          "name": "offerId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "orderId": {
-          "name": "orderId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_application_log_offerId_offer_id_fk": {
-          "name": "offer_application_log_offerId_offer_id_fk",
-          "tableFrom": "offer_application_log",
-          "tableTo": "offer",
-          "columnsFrom": [
-            "offerId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_benefit": {
-      "name": "offer_benefit",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "isActive": {
-          "name": "isActive",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
-        "type": {
-          "name": "type",
-          "type": "offer_benefit_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "value": {
-          "name": "value",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "maxAffectedItems": {
-          "name": "maxAffectedItems",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_condition": {
-      "name": "offer_condition",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "rangeId": {
-          "name": "rangeId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "offer_condition_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "value": {
-          "name": "value",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_condition_rangeId_offer_range_id_fk": {
-          "name": "offer_condition_rangeId_offer_range_id_fk",
-          "tableFrom": "offer_condition",
-          "tableTo": "offer_range",
-          "columnsFrom": [
-            "rangeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_range_excluded_products": {
-      "name": "offer_range_excluded_products",
-      "schema": "",
-      "columns": {
-        "offerRangeId": {
-          "name": "offerRangeId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "productId": {
-          "name": "productId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_range_excluded_products_offerRangeId_offer_range_id_fk": {
-          "name": "offer_range_excluded_products_offerRangeId_offer_range_id_fk",
-          "tableFrom": "offer_range_excluded_products",
-          "tableTo": "offer_range",
-          "columnsFrom": [
-            "offerRangeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "offer_range_excluded_products_productId_product_id_fk": {
-          "name": "offer_range_excluded_products_productId_product_id_fk",
-          "tableFrom": "offer_range_excluded_products",
-          "tableTo": "product",
-          "columnsFrom": [
-            "productId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "offer_range_excluded_products_offerRangeId_productId_pk": {
-          "name": "offer_range_excluded_products_offerRangeId_productId_pk",
-          "columns": [
-            "offerRangeId",
-            "productId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_range_included_product_brands": {
-      "name": "offer_range_included_product_brands",
-      "schema": "",
-      "columns": {
-        "offerRangeId": {
-          "name": "offerRangeId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "brandId": {
-          "name": "brandId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_range_included_product_brands_offerRangeId_offer_range_id_fk": {
-          "name": "offer_range_included_product_brands_offerRangeId_offer_range_id_fk",
-          "tableFrom": "offer_range_included_product_brands",
-          "tableTo": "offer_range",
-          "columnsFrom": [
-            "offerRangeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "offer_range_included_product_brands_brandId_brand_id_fk": {
-          "name": "offer_range_included_product_brands_brandId_brand_id_fk",
-          "tableFrom": "offer_range_included_product_brands",
-          "tableTo": "brand",
-          "columnsFrom": [
-            "brandId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "offer_range_included_product_brands_offerRangeId_brandId_pk": {
-          "name": "offer_range_included_product_brands_offerRangeId_brandId_pk",
-          "columns": [
-            "offerRangeId",
-            "brandId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_range_included_product_categories": {
-      "name": "offer_range_included_product_categories",
-      "schema": "",
-      "columns": {
-        "offerRangeId": {
-          "name": "offerRangeId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "categoryId": {
-          "name": "categoryId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_range_included_product_categories_offerRangeId_offer_range_id_fk": {
-          "name": "offer_range_included_product_categories_offerRangeId_offer_range_id_fk",
-          "tableFrom": "offer_range_included_product_categories",
-          "tableTo": "offer_range",
-          "columnsFrom": [
-            "offerRangeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "offer_range_included_product_categories_categoryId_category_id_fk": {
-          "name": "offer_range_included_product_categories_categoryId_category_id_fk",
-          "tableFrom": "offer_range_included_product_categories",
-          "tableTo": "category",
-          "columnsFrom": [
-            "categoryId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "offer_range_included_product_categories_offerRangeId_categoryId_pk": {
-          "name": "offer_range_included_product_categories_offerRangeId_categoryId_pk",
-          "columns": [
-            "offerRangeId",
-            "categoryId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_range_included_product_classes": {
-      "name": "offer_range_included_product_classes",
-      "schema": "",
-      "columns": {
-        "offerRangeId": {
-          "name": "offerRangeId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "productClassId": {
-          "name": "productClassId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_range_included_product_classes_offerRangeId_offer_range_id_fk": {
-          "name": "offer_range_included_product_classes_offerRangeId_offer_range_id_fk",
-          "tableFrom": "offer_range_included_product_classes",
-          "tableTo": "offer_range",
-          "columnsFrom": [
-            "offerRangeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "offer_range_included_product_classes_productClassId_product_class_id_fk": {
-          "name": "offer_range_included_product_classes_productClassId_product_class_id_fk",
-          "tableFrom": "offer_range_included_product_classes",
-          "tableTo": "product_class",
-          "columnsFrom": [
-            "productClassId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "offer_range_included_product_classes_offerRangeId_productClassId_pk": {
-          "name": "offer_range_included_product_classes_offerRangeId_productClassId_pk",
-          "columns": [
-            "offerRangeId",
-            "productClassId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_range_included_products": {
-      "name": "offer_range_included_products",
-      "schema": "",
-      "columns": {
-        "offerRangeId": {
-          "name": "offerRangeId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "productId": {
-          "name": "productId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_range_included_products_offerRangeId_offer_range_id_fk": {
-          "name": "offer_range_included_products_offerRangeId_offer_range_id_fk",
-          "tableFrom": "offer_range_included_products",
-          "tableTo": "offer_range",
-          "columnsFrom": [
-            "offerRangeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "offer_range_included_products_productId_product_id_fk": {
-          "name": "offer_range_included_products_productId_product_id_fk",
-          "tableFrom": "offer_range_included_products",
-          "tableTo": "product",
-          "columnsFrom": [
-            "productId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "offer_range_included_products_offerRangeId_productId_pk": {
-          "name": "offer_range_included_products_offerRangeId_productId_pk",
-          "columns": [
-            "offerRangeId",
-            "productId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer_range": {
-      "name": "offer_range",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "isActive": {
-          "name": "isActive",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
-        "includeAllProducts": {
-          "name": "includeAllProducts",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "shouldMatchAll": {
-          "name": "shouldMatchAll",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.offer": {
-      "name": "offer",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "image": {
-          "name": "image",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "offer_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "voucherCode": {
-          "name": "voucherCode",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "conditionId": {
-          "name": "conditionId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "benefitId": {
-          "name": "benefitId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "startDate": {
-          "name": "startDate",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "endDate": {
-          "name": "endDate",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "isActive": {
-          "name": "isActive",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
-        "isFeatured": {
-          "name": "isFeatured",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "priority": {
-          "name": "priority",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "limitPerUser": {
-          "name": "limitPerUser",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "limitTotalUses": {
-          "name": "limitTotalUses",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "offer_conditionId_offer_condition_id_fk": {
-          "name": "offer_conditionId_offer_condition_id_fk",
-          "tableFrom": "offer",
-          "tableTo": "offer_condition",
-          "columnsFrom": [
-            "conditionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "offer_benefitId_offer_benefit_id_fk": {
-          "name": "offer_benefitId_offer_benefit_id_fk",
-          "tableFrom": "offer",
-          "tableTo": "offer_benefit",
-          "columnsFrom": [
-            "benefitId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-=======
->>>>>>> 015f301f4081eca840dd246201d6e1e1521a7679
     }
   },
   "enums": {
@@ -2052,7 +1409,9 @@
       "schema": "public",
       "values": [
         "Pending",
+        "Confirmed",
         "Processing",
+        "Processed",
         "Couriered",
         "Shipped",
         "Delivered",
@@ -2090,37 +1449,6 @@
         "Disproved",
         "Refunded"
       ]
-<<<<<<< HEAD
-    },
-    "public.offer_benefit_type": {
-      "name": "offer_benefit_type",
-      "schema": "public",
-      "values": [
-        "fixedAmount",
-        "percentage",
-        "freeShipping",
-        "fixedPrice"
-      ]
-    },
-    "public.offer_condition_type": {
-      "name": "offer_condition_type",
-      "schema": "public",
-      "values": [
-        "basketItems",
-        "basketValue",
-        "distinctBasketItems"
-      ]
-    },
-    "public.offer_type": {
-      "name": "offer_type",
-      "schema": "public",
-      "values": [
-        "site",
-        "voucher",
-        "user"
-      ]
-=======
->>>>>>> 015f301f4081eca840dd246201d6e1e1521a7679
     }
   },
   "schemas": {},

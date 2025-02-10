@@ -1,15 +1,15 @@
-import { and, eq, notInArray, or, sql, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, notInArray, or, sql, SQL } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { CartLine, carts } from "../../cart/schemas";
-import { NewOrder, NewPaymentEvent, NewTransaction, Order, OrderLine, orderLines, orders, orderStatusChanges, paymentEvents, transactions } from "../schemas";
+import { NewOrder, NewPaymentEvent, NewTransaction, Order, OrderLine, orderLines, orderLogs, orders, orderStatusChanges, paymentEvents, transactions } from "../schemas";
 
-type OrderStatus = 'Pending'|'Processing'|'Couriered'|'Shipped'|'Delivered'|'Returned'|'Cancelled'|'Completed'
+type OrderStatus = 'Pending'|'Confirmed'|'Processing'|'Processed'|'Couriered'|'Shipped'|'Delivered'|'Returned'|'Cancelled'|'Completed'
 type OrderPaymentStatus = 'Pending'|'Paid'|'Refunded'
 
 type OrderListFilter = {
     q?: string;
-    orderStatus?: 'Active'|'Cancelled'|'Completed';
-    detailedStatus?: OrderStatus;
+    tab?: 'Active'|'Inactive'|'Cancelled'|'Completed';
+    status?: OrderStatus;
     userId?: string;
     createdAt?: string;
     paymentStatus?: OrderPaymentStatus;
@@ -19,6 +19,18 @@ type OrderListFilter = {
     }
 }
 
+const STATUS_LOG: { [key in OrderStatus]: string } = {
+    Pending: 'Order received',
+    Confirmed: 'Order confirmed',
+    Processing: 'Order in progress',
+    Processed: 'Ready for shipping',
+    Couriered: 'Order couriered',
+    Shipped: 'Order shipped',
+    Delivered: 'Order delivered',
+    Returned: 'Order returned',
+    Cancelled: 'Order cancelled',
+    Completed: 'Order completed'
+}
   
 
 class OrderService {
@@ -50,6 +62,7 @@ class OrderService {
             discount: Number(line.originalPrice) - Number(line.price),
             quantity: line.quantity
         })))
+        await this.createLog(order.id, STATUS_LOG.Pending)
         return {
             ...order,
             hash: this.generateHash(order.id.toString())
@@ -67,17 +80,25 @@ class OrderService {
         return subtotal - discount + tax;
     }
 
-    async changeStatus(orderId: number, newStatus: OrderStatus) {
-        const [order] = await this.db.select().from(orders).where(eq(orders.id, orderId));
-        if (!order || order.status === newStatus) {
-            return
-        }
-        await this.db.update(orders).set({ status: newStatus }).where(eq(orders.id, order.id))
+    async createLog(orderId: number, log: string) {
+        await this.db.insert(orderLogs).values({
+            orderId,
+            log
+        })
+    }
+
+    async getLogs(orderId: number) {
+        return await this.db.select().from(orderLogs).where(eq(orderLogs.orderId, orderId)).orderBy(asc(orderLogs.createdAt))
+    }
+
+    async changeStatus(orderId: number, previousStatus: OrderStatus, newStatus: OrderStatus) {
+        await this.db.update(orders).set({ status: newStatus }).where(eq(orders.id, orderId))
         await this.db.insert(orderStatusChanges).values({
-            orderId: order.id,
-            previousStatus: order.status,
+            orderId: orderId,
+            previousStatus: previousStatus,
             newStatus
         })
+        await this.createLog(orderId, STATUS_LOG[newStatus])
     }
 
     async createTransaction(orderId: number, transaction: NewTransaction) {
@@ -110,12 +131,13 @@ class OrderService {
         );
     }
 
-    async cancel(orderId: number, cancelledBy: string, cancellationReason: string) {
-        return await this.db.update(orders).set({
+    async cancel(orderId: number, cancelledBy: string, cancellationReason: string, cancellationRemarks?: string | null) {
+        await this.db.update(orders).set({
             status: 'Cancelled',
             cancelledBy,
             cancelledAt: new Date(),
-            cancellationReason
+            cancellationReason,
+            cancellationRemarks
         }).where(eq(orders.id, orderId))
     }
 
@@ -123,7 +145,16 @@ class OrderService {
         const order = await this.db.query.orders.findFirst(
             {
                 with:{
-                    lines: true
+                    lines: {
+                        with:{
+                            product: {
+                                with: {
+                                    category: true,
+                                    brand: true
+                                }
+                            }
+                        }
+                    }
                 },
                 where: and(
                     eq(orders.id, orderId),
@@ -163,16 +194,23 @@ class OrderService {
             )
         }
 
-        if(filters?.orderStatus){
-            if(filters.orderStatus === 'Active'){
-                where.push(notInArray(orders.status, ['Cancelled', 'Completed']))
-            }else{
-                where.push(eq(orders.status, filters.orderStatus))
+        if(filters?.tab){
+            if(filters.tab === 'Active'){
+                where.push(
+                    notInArray(orders.status, ['Completed', 'Cancelled'])
+                )
+            }else if(filters.tab === 'Inactive'){
+                where.push(
+                    inArray(orders.status, ['Completed', 'Cancelled'])
+                )
+            }
+            else{
+                where.push(eq(orders.status, filters.tab))
             }
         }
 
-        if (filters?.detailedStatus) {
-            where.push(eq(orders.status, filters.detailedStatus))
+        if (filters?.status) {
+            where.push(eq(orders.status, filters.status))
         }
 
         if (filters?.userId) {
@@ -189,17 +227,30 @@ class OrderService {
             where.push(eq(orders.paymentStatus, filters.paymentStatus))
         }
 
-        const query = this.db
-            .select()
-            .from(orders)
-            .where(and(...where))
+        const query = {
+            with: {
+                lines: {
+                    with:{
+                        product: true
+                    }
+                }
+            },
+            where: and(...where)
+        }
+
 
         if (!filters?.pagination) {
-            return await query
+            return await this.db.query.orders.findMany(query)
         }
 
         const { page, size } = filters.pagination
-        const results = await query.limit(size).offset((page - 1) * size)
+        const results = await this.db.query.orders.findMany({
+            ...query,
+            orderBy: desc(orders.createdAt),
+            skip: (page - 1) * size,
+            take: size
+        })
+            
         const total = await this.db.$count(orders, and(...where))
         return {
             results: results,
@@ -210,6 +261,10 @@ class OrderService {
                 pages: Math.ceil(total / size),
             }
         }
+    }
+
+    async delete(orderId: number) {
+        await this.db.delete(orders).where(eq(orders.id, orderId))
     }
 }
 
