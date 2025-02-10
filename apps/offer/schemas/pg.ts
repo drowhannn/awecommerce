@@ -1,11 +1,20 @@
-import { brands, categories, productClasses, products } from 'apps/product/schemas'
+import {
+  brands,
+  categories,
+  productClasses,
+  products,
+} from 'apps/product/schemas'
 import { relations } from 'drizzle-orm'
 import {
   boolean,
   integer,
-  numeric, pgEnum, pgTable, primaryKey, serial,
+  numeric,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  serial,
   text,
-  timestamp
+  timestamp,
 } from 'drizzle-orm/pg-core'
 
 export const offerRanges = pgTable('offer_range', {
@@ -168,8 +177,8 @@ export const offerApplicationLogs = pgTable('offer_application_log', {
 export const offerRangeRelations = relations(offerRanges, ({ many, one }) => ({
   includedProducts: many(offerRangeIncludedProducts),
   excludedProducts: many(offerRangeExcludedProducts),
-  excludedProductCategories: many(offerRangeIncludedProductCategories),
-  excludedProductBrands: many(offerRangeIncludedProductBrands),
+  includedProductCategories: many(offerRangeIncludedProductCategories),
+  includedProductBrands: many(offerRangeIncludedProductBrands),
   includedProductClasses: many(offerRangeIncludedProductClasses),
 }))
 
@@ -235,3 +244,36 @@ export const offerApplicationLogRelations = relations(
     offer: one(offers),
   }),
 )
+
+export type Offer = typeof offers.$inferSelect
+export type NewOffer = Omit<Offer, 'id' | 'createdAt' | 'updatedAt'>
+export type UpdateOffer = Partial<NewOffer>
+
+export type OfferRange = typeof offerRanges.$inferSelect
+export interface NewOfferRange
+  extends Omit<OfferRange, 'id' | 'createdAt' | 'updatedAt'> {
+  includedProducts?: number[]
+  excludedProducts?: number[]
+  includedProductCategories?: number[]
+  includedProductBrands?: number[]
+  includedProductClasses?: number[]
+}
+export type UpdateOfferRange = Partial<NewOfferRange>
+
+export type OfferCondition = typeof offerConditions.$inferSelect
+export type NewOfferCondition = Omit<OfferCondition, 'id'>
+export type UpdateOfferCondition = Partial<NewOfferCondition>
+
+export type OfferBenefit = typeof offerBenefits.$inferSelect
+export type NewOfferBenefit = Omit<
+  OfferBenefit,
+  'id' | 'createdAt' | 'updatedAt'
+>
+export type UpdateOfferBenefit = Partial<NewOfferBenefit>
+
+export type OfferApplicationLog = typeof offerApplicationLogs.$inferSelect
+export type NewOfferApplicationLog = Omit<
+  OfferApplicationLog,
+  'id' | 'createdAt' | 'updatedAt'
+>
+export type UpdateOfferApplicationLog = Partial<NewOfferApplicationLog>
